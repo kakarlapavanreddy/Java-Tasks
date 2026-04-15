@@ -4,28 +4,41 @@ public class Emp_sal {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		
+
 		        Scanner sc = new Scanner(System.in);
 
-		        double salary;
-		        double total = 0;
+		        // Input employee details
+		        System.out.print("Enter Employee Name: ");
+		        String name = sc.nextLine();
 
-		        // Loop to read 10 employees
-		        for (int i = 1; i <= 10; i++) {
+		        System.out.print("Enter Designation: ");
+		        String des = sc.nextLine();
 
-		            System.out.print("Enter salary of employee " + i + ": ");
-		            salary = sc.nextDouble();
+		        System.out.print("Enter Experience (years): ");
+		        int exp = sc.nextInt();
 
-		            total += salary;
+		        System.out.print("Enter Salary: ");
+		        double salary = sc.nextDouble();
+
+		        double bonus = 0;
+
+		        // Bonus based on experience
+		        if (exp >= 5) {
+		            bonus = salary * 0.20;
+		        } else if (exp >= 2) {
+		            bonus = salary * 0.10;
+		        } else {
+		            bonus = salary * 0.05;
 		        }
 
-		        double average = total / 10;
+		        double total = salary + bonus;
 
-		        System.out.println("\n===== RESULT =====");
-		        System.out.println("Total Salary = " + total);
-		        System.out.println("Average Salary = " + average);
+		        // Output
+		        System.out.println("Name: " + name);
+		        System.out.println("Designation: " + des);
+		        System.out.println("Bonus: " + bonus);
+		        System.out.println("Total Salary: " + total);
 
 		        sc.close();
 		    }
-
-}
+		}
