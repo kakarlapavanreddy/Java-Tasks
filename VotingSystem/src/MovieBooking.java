@@ -1,148 +1,168 @@
+package com.nt;
+
 import java.util.*;
-import java.io.*;
 
-// ----------- TICKET CLASS -----------
-class Ticket {
-    String userName;
-    int row;
-    int col;
+public class MovieTickets {
 
-    public Ticket(String userName, int row, int col) {
-        this.userName = userName;
-        this.row = row;
-        this.col = col;
-    }
-
-    @Override
-    public String toString() {
-        return userName + " booked seat [" + row + "," + col + "]";
-    }
-}
-
-// ----------- MAIN CLASS -----------
-public class MovieBooking {
-
-    static boolean[][] seats = new boolean[5][5]; // false = available
-    static Map<String, List<Ticket>> bookings = new HashMap<>();
     static Scanner sc = new Scanner(System.in);
 
-    public static void main(String[] args) {
+    // Store bookings → Phone → Seats
+    static HashMap<String, List<String>> bookings = new HashMap<>();
 
-        while (true) {
-            System.out.println("\n===== MOVIE TICKET BOOKING =====");
-            System.out.println("1. Show Seats");
-            System.out.println("2. Book Ticket");
-            System.out.println("3. View My Bookings");
-            System.out.println("4. Save Bookings");
-            System.out.println("5. Exit");
-            System.out.print("Enter choice: ");
+    // Seat map
+    static HashMap<String, Boolean> seats = new HashMap<>();
 
-            int choice = sc.nextInt();
+    // Initialize seats
+    static void initializeSeats() {
 
-            switch (choice) {
-                case 1:
-                    showSeats();
-                    break;
+        for (char row = 'A'; row <= 'Z'; row++) {
 
-                case 2:
-                    bookTicket();
-                    break;
+            int maxSeat;
 
-                case 3:
-                    viewBookings();
-                    break;
+            if (row <= 'H') {           // Premium
+                maxSeat = 25;
+            } else if (row <= 'P') {    // Gold
+                maxSeat = 20;
+            } else {                   // First Class
+                maxSeat = 25;
+            }
 
-                case 4:
-                    saveToFile();
-                    break;
-
-                case 5:
-                    System.exit(0);
-
-                default:
-                    System.out.println("Invalid choice!");
+            for (int i = 1; i <= maxSeat; i++) {
+                seats.put(row + "" + i, false); // false = available
             }
         }
     }
 
-    // ----------- SHOW SEATS -----------
-    public static void showSeats() {
-        System.out.println("\nO = Available | X = Booked\n");
-        for (int i = 0; i < seats.length; i++) {
-            for (int j = 0; j < seats[i].length; j++) {
-                System.out.print(seats[i][j] ? "X " : "O ");
+    public static void main(String[] args) {
+
+        initializeSeats();
+
+        int choice;
+
+        do {
+            System.out.println("\n===== MOVIE BOOKING SYSTEM =====");
+            System.out.println("1. View Seats");
+            System.out.println("2. Book Ticket");
+            System.out.println("3. Cancel Ticket");
+            System.out.println("4. Exit");
+            System.out.print("Enter choice: ");
+
+            choice = sc.nextInt();
+            sc.nextLine();
+
+            switch (choice) {
+                case 1: viewSeats(); break;
+                case 2: bookTicket(); break;
+                case 3: cancelTicket(); break;
+                case 4: System.out.println("Thank you!"); break;
+                default: System.out.println("Invalid choice!");
+            }
+
+        } while (choice != 4);
+    }
+
+    // -------- VIEW SEATS --------
+    static void viewSeats() {
+
+        System.out.println("\n===== SEAT LAYOUT =====");
+        System.out.println("Premium (A-H) | Gold (I-P) | First Class (Q-Z)\n");
+
+        for (char row = 'A'; row <= 'Z'; row++) {
+
+            int maxSeat = (row <= 'H') ? 25 : (row <= 'P') ? 20 : 25;
+
+            System.out.print(row + " : ");
+
+            for (int i = 1; i <= maxSeat; i++) {
+
+                String seat = row + "" + i;
+
+                if (seats.get(seat)) {
+                    System.out.print("[X] "); // booked
+                } else {
+                    System.out.print("[O] "); // available
+                }
             }
             System.out.println();
         }
     }
 
-    // ----------- BOOK TICKET -----------
-    public static void bookTicket() {
-        try {
-            sc.nextLine(); // consume newline
+    // -------- BOOK --------
+    static void bookTicket() {
 
-            System.out.print("Enter your name: ");
-            String name = sc.nextLine();
+        System.out.print("Enter Phone Number: ");
+        String phone = sc.nextLine();
 
-            showSeats();
+        System.out.print("Enter Seat (e.g., A10): ");
+        String seat = sc.nextLine().toUpperCase();
 
-            System.out.print("Enter row (0-4): ");
-            int r = sc.nextInt();
-
-            System.out.print("Enter column (0-4): ");
-            int c = sc.nextInt();
-
-            if (r < 0 || r >= 5 || c < 0 || c >= 5) {
-                throw new Exception("Invalid seat position!");
-            }
-
-            if (seats[r][c]) {
-                throw new Exception("Seat already booked!");
-            }
-
-            seats[r][c] = true;
-
-            Ticket ticket = new Ticket(name, r, c);
-
-            bookings.putIfAbsent(name, new ArrayList<>());
-            bookings.get(name).add(ticket);
-
-            System.out.println("✅ Ticket booked successfully!");
-
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
-        }
-    }
-
-    // ----------- VIEW BOOKINGS -----------
-    public static void viewBookings() {
-        sc.nextLine();
-
-        System.out.print("Enter your name: ");
-        String name = sc.nextLine();
-
-        if (!bookings.containsKey(name)) {
-            System.out.println("No bookings found!");
+        if (!seats.containsKey(seat)) {
+            System.out.println("Invalid seat!");
             return;
         }
 
-        System.out.println("\n--- Your Bookings ---");
-        for (Ticket t : bookings.get(name)) {
-            System.out.println(t);
+        if (seats.get(seat)) {
+            System.out.println("Seat already booked!");
+            return;
+        }
+
+        seats.put(seat, true);
+
+        bookings.putIfAbsent(phone, new ArrayList<>());
+        bookings.get(phone).add(seat);
+
+        int price = getPrice(seat);
+
+        System.out.println("Booking successful!");
+        System.out.println("Seat: " + seat);
+        System.out.println("Category: " + getCategory(seat));
+        System.out.println("Price: ₹" + price);
+    }
+
+    // -------- CANCEL --------
+    static void cancelTicket() {
+
+        System.out.print("Enter Phone Number: ");
+        String phone = sc.nextLine();
+
+        if (!bookings.containsKey(phone)) {
+            System.out.println("No booking found!");
+            return;
+        }
+
+        System.out.println("Your Seats: " + bookings.get(phone));
+
+        System.out.print("Enter Seat to Cancel: ");
+        String seat = sc.nextLine().toUpperCase();
+
+        if (bookings.get(phone).contains(seat)) {
+
+            seats.put(seat, false);
+            bookings.get(phone).remove(seat);
+
+            System.out.println("Ticket Cancelled!");
+        } else {
+            System.out.println("Invalid seat!");
         }
     }
 
-    // ----------- SAVE TO FILE -----------
-    public static void saveToFile() {
-        try (FileWriter fw = new FileWriter("tickets.txt")) {
-            for (List<Ticket> list : bookings.values()) {
-                for (Ticket t : list) {
-                    fw.write(t.toString() + "\n");
-                }
-            }
-            System.out.println("✅ Bookings saved to file");
-        } catch (IOException e) {
-            System.out.println("❌ File error: " + e.getMessage());
-        }
+    // -------- CATEGORY --------
+    static String getCategory(String seat) {
+
+        char row = seat.charAt(0);
+
+        if (row <= 'H') return "Premium";
+        else if (row <= 'P') return "Gold";
+        else return "First Class";
+    }
+
+    // -------- PRICE --------
+    static int getPrice(String seat) {
+
+        char row = seat.charAt(0);
+
+        if (row <= 'H') return 300;
+        else if (row <= 'P') return 200;
+        else return 150;
     }
 }
