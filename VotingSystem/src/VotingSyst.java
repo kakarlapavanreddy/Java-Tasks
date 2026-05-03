@@ -1,149 +1,151 @@
+package com.nt;
 import java.util.*;
-import java.io.*;
 
-// ----------- VOTER CLASS -----------
-class Voter {
-    private String name;
-    private boolean hasVoted;
+// -------- USER CLASS --------
+class User {
+    String username;
+    String password;
+    boolean hasVoted;
 
-    public Voter(String name) {
-        this.name = name;
+    User(String username, String password) {
+        this.username = username;
+        this.password = password;
         this.hasVoted = false;
     }
-
-    public String getName() {
-        return name;
-    }
-
-    public boolean hasVoted() {
-        return hasVoted;
-    }
-
-    public void setVoted(boolean status) {
-        this.hasVoted = status;
-    }
 }
 
-// ----------- CANDIDATE CLASS -----------
-class Candidate {
-    private String name;
-    private int votes;
+public class OnlineVotingSystem {
 
-    public Candidate(String name) {
-        this.name = name;
-        this.votes = 0;
-    }
+    static Scanner sc = new Scanner(System.in);
 
-    public String getName() {
-        return name;
-    }
+    // Store users
+    static HashMap<String, User> users = new HashMap<>();
 
-    public int getVotes() {
-        return votes;
-    }
-
-    public void addVote() {
-        votes++;
-    }
-}
-
-// ----------- MAIN CLASS -----------
-public class VotingSyst {
-
-    static Map<String, Voter> voters = new HashMap<>();
-    static Map<String, Candidate> candidates = new HashMap<>();
+    // Store votes
+    static HashMap<String, Integer> candidates = new HashMap<>();
 
     public static void main(String[] args) {
 
-        Scanner sc = new Scanner(System.in);
+        // Default candidates
+        candidates.put("Alice", 0);
+        candidates.put("Bob", 0);
+        candidates.put("Charlie", 0);
 
-        // Initialize candidates
-        candidates.put("Alice", new Candidate("Alice"));
-        candidates.put("Bob", new Candidate("Bob"));
+        int choice;
 
-        while (true) {
+        do {
             System.out.println("\n===== ONLINE VOTING SYSTEM =====");
-            System.out.println("1. Vote");
-            System.out.println("2. Show Results");
-            System.out.println("3. Save Results to File");
+            System.out.println("1. Register");
+            System.out.println("2. Login & Vote");
+            System.out.println("3. Admin - View Results");
             System.out.println("4. Exit");
             System.out.print("Enter choice: ");
 
-            int choice = sc.nextInt();
-            sc.nextLine(); // consume newline
+            choice = sc.nextInt();
+            sc.nextLine();
 
             switch (choice) {
-
-                case 1:
-                    vote(sc);
-                    break;
-
-                case 2:
-                    showResults();
-                    break;
-
-                case 3:
-                    saveResults();
-                    break;
-
-                case 4:
-                    System.out.println("Exiting...");
-                    System.exit(0);
-
-                default:
-                    System.out.println("Invalid choice!");
+                case 1: register(); break;
+                case 2: loginAndVote(); break;
+                case 3: showResults(); break;
+                case 4: System.out.println("Thank you!"); break;
+                default: System.out.println("Invalid choice!");
             }
+
+        } while (choice != 4);
+    }
+
+    // -------- REGISTER --------
+    static void register() {
+
+        System.out.print("Enter Username: ");
+        String username = sc.nextLine();
+
+        if (users.containsKey(username)) {
+            System.out.println("Username already exists!");
+            return;
+        }
+
+        System.out.print("Enter Password: ");
+        String password = sc.nextLine();
+
+        users.put(username, new User(username, password));
+
+        System.out.println("Registration Successful!");
+    }
+
+    // -------- LOGIN & VOTE --------
+    static void loginAndVote() {
+
+        System.out.print("Enter Username: ");
+        String username = sc.nextLine();
+
+        System.out.print("Enter Password: ");
+        String password = sc.nextLine();
+
+        if (!users.containsKey(username) ||
+            !users.get(username).password.equals(password)) {
+
+            System.out.println("Invalid Login!");
+            return;
+        }
+
+        User user = users.get(username);
+
+        if (user.hasVoted) {
+            System.out.println("You have already voted!");
+            return;
+        }
+
+        // Show candidates
+        System.out.println("\nCandidates:");
+        for (String name : candidates.keySet()) {
+            System.out.println("- " + name);
+        }
+
+        System.out.print("Enter your vote: ");
+        String vote = sc.nextLine();
+
+        if (candidates.containsKey(vote)) {
+
+            // Increase vote count
+            candidates.put(vote, candidates.get(vote) + 1);
+
+            user.hasVoted = true;
+
+            System.out.println("Vote cast successfully!");
+
+        } else {
+            System.out.println("Invalid candidate!");
         }
     }
 
-    // ----------- VOTING LOGIC -----------
-    public static void vote(Scanner sc) {
-        try {
-            System.out.print("Enter your name: ");
-            String name = sc.nextLine();
+    // -------- RESULTS --------
+    static void showResults() {
 
-            Voter voter = voters.getOrDefault(name, new Voter(name));
+        System.out.print("Enter Admin Password: ");
+        String admin = sc.nextLine();
 
-            if (voter.hasVoted()) {
-                throw new Exception("You already voted!");
-            }
-
-            System.out.println("Candidates: " + candidates.keySet());
-            System.out.print("Enter candidate name: ");
-            String candidateName = sc.nextLine();
-
-            if (!candidates.containsKey(candidateName)) {
-                throw new Exception("Invalid candidate!");
-            }
-
-            candidates.get(candidateName).addVote();
-            voter.setVoted(true);
-            voters.put(name, voter);
-
-            System.out.println("✅ Vote successful!");
-
-        } catch (Exception e) {
-            System.out.println("❌ Error: " + e.getMessage());
+        if (!admin.equals("admin123")) {
+            System.out.println("Access Denied!");
+            return;
         }
-    }
 
-    // ----------- DISPLAY RESULTS -----------
-    public static void showResults() {
         System.out.println("\n===== RESULTS =====");
-        for (Candidate c : candidates.values()) {
-            System.out.println(c.getName() + " : " + c.getVotes());
-        }
-    }
 
-    // ----------- FILE HANDLING -----------
-    public static void saveResults() {
-        try (FileWriter fw = new FileWriter("results.txt")) {
-            for (Candidate c : candidates.values()) {
-                fw.write(c.getName() + " : " + c.getVotes() + "\n");
+        String winner = "";
+        int max = 0;
+
+        for (Map.Entry<String, Integer> entry : candidates.entrySet()) {
+
+            System.out.println(entry.getKey() + " : " + entry.getValue());
+
+            if (entry.getValue() > max) {
+                max = entry.getValue();
+                winner = entry.getKey();
             }
-            System.out.println("✅ Results saved to results.txt");
-        } catch (IOException e) {
-            System.out.println("❌ File Error: " + e.getMessage());
         }
+
+        System.out.println("Winner: " + winner);
     }
 }
